@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
             padding: 0;
             background: linear-gradient(135deg, #f0f4ff, #dff3e3);
         }
+
         header {
             background-color: #4CAF50;
             color: white;
@@ -22,6 +24,7 @@
             text-align: center;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
         }
+
         main {
             width: 90%;
             max-width: 600px;
@@ -31,13 +34,16 @@
             padding: 20px;
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
         }
+
         #inputArea {
             display: flex;
             flex-direction: column;
             gap: 15px;
             margin-bottom: 20px;
         }
-        #noteTitle, #noteContent {
+
+        #noteTitle,
+        #noteContent {
             padding: 12px;
             border: 1px solid #ccc;
             border-radius: 8px;
@@ -45,9 +51,12 @@
             outline: none;
             transition: box-shadow 0.3s ease;
         }
-        #noteTitle:focus, #noteContent:focus {
+
+        #noteTitle:focus,
+        #noteContent:focus {
             box-shadow: 0px 0px 10px rgba(76, 175, 80, 0.5);
         }
+
         #addNoteButton {
             padding: 12px;
             background-color: #4CAF50;
@@ -58,14 +67,17 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
+
         #addNoteButton:hover {
             background-color: #45a049;
         }
+
         #notesContainer {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
+
         .note {
             border: 1px solid #ccc;
             border-radius: 8px;
@@ -75,25 +87,30 @@
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .note:hover {
             transform: translateY(-5px);
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
         }
+
         .note h2 {
             margin: 0 0 10px;
             font-size: 18px;
             color: #333;
         }
+
         .note p {
             margin: 0;
             font-size: 14px;
             color: #555;
         }
+
         .note .timestamp {
             font-size: 12px;
             color: #888;
             margin-top: 5px;
         }
+
         .deleteButton {
             position: absolute;
             top: 10px;
@@ -106,9 +123,28 @@
             border-radius: 3px;
             transition: background-color 0.3s ease;
         }
+
         .deleteButton:hover {
             background-color: darkred;
         }
+
+        .downloadButton {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 5px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background-color 0.3s ease;
+        }
+
+        .downloadButton:hover {
+            background-color: #2980b9;
+        }
+
         footer {
             margin-top: 20px;
             padding: 10px;
@@ -117,6 +153,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <header>
@@ -124,7 +161,7 @@
     </header>
 
     <main>
-         <div id="inputArea">
+        <div id="inputArea">
             <input type="text" id="noteTitle" placeholder="Judul Catatan">
             <textarea id="noteContent" placeholder="Isi Catatan"></textarea>
             <button id="addNoteButton">Tambah Catatan</button>
@@ -151,11 +188,11 @@
             notesData.forEach((note, index) => {
                 const noteElement = document.createElement('div');
                 noteElement.classList.add('note');
-                
+
                 const titleElement = document.createElement('h2');
                 titleElement.innerText = note.title;
                 noteElement.appendChild(titleElement);
-                
+
                 const contentElement = document.createElement('p');
                 contentElement.innerText = note.content;
                 noteElement.appendChild(contentElement);
@@ -171,6 +208,12 @@
                 deleteButton.onclick = () => deleteNote(index);
                 noteElement.appendChild(deleteButton);
 
+                const downloadButton = document.createElement('button');
+                downloadButton.classList.add('downloadButton');
+                downloadButton.innerText = 'Unduh';
+                downloadButton.onclick = () => downloadNoteAsImage(note); // Panggil fungsi unduh
+                noteElement.appendChild(downloadButton);
+
                 notesContainer.appendChild(noteElement);
             });
         }
@@ -184,8 +227,12 @@
         function getCurrentTimestamp() {
             const now = new Date();
             return now.toLocaleString('id-ID', {
-                year: 'numeric', month: 'long', day: 'numeric',
-                hour: '2-digit', minute: '2-digit', second: '2-digit'
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
             });
         }
 
@@ -195,18 +242,61 @@
             const timestamp = getCurrentTimestamp();
 
             if (title !== "" && content !== "") {
-              notesData.push({ title, content, timestamp });
-              localStorage.setItem('notes', JSON.stringify(notesData));
-              noteTitleInput.value = '';
-              noteContentInput.value = '';
-              displayNotes();
+                notesData.push({
+                    title,
+                    content,
+                    timestamp
+                });
+                localStorage.setItem('notes', JSON.stringify(notesData));
+                noteTitleInput.value = '';
+                noteContentInput.value = '';
+                displayNotes();
             } else {
                 alert("Judul dan isi catatan tidak boleh kosong.");
             }
         });
 
+        // Fungsi untuk mengunduh catatan sebagai gambar
+        function downloadNoteAsImage(note) {
+            // Buat elemen canvas
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Ukuran canvas (sesuaikan sesuai kebutuhan)
+            canvas.width = 500;
+            canvas.height = 300;
+
+            // Warna latar belakang (opsional)
+            context.fillStyle = '#fff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Gaya teks
+            context.font = '20px Arial';
+            context.fillStyle = '#000';
+            context.textAlign = 'center';
+
+            // Tambahkan judul dan konten ke canvas
+            context.fillText(note.title, canvas.width / 2, 50);
+            context.font = '14px Arial';
+            context.fillText(note.content, canvas.width / 2, 150);
+            context.font = '10px Arial';
+            context.fillText(note.timestamp, canvas.width / 2, 250);
+
+            // Konversi canvas menjadi URL data
+            const imageURL = canvas.toDataURL('image/jpeg');
+
+            // Buat elemen tautan (a) untuk mengunduh gambar
+            const downloadLink = document.createElement('a');
+            downloadLink.href = imageURL;
+            downloadLink.download = `${note.title}.jpg`; // Nama file
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
         displayNotes();
     </script>
 
 </body>
+
 </html>
