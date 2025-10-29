@@ -85,12 +85,12 @@
             border: 1px solid #ccc;
             border-radius: 8px;
             padding: 15px;
-            padding-right: 70px; /* Tambahan ruang untuk tombol di kanan */
+            padding-right: 120px; /* Diperluas untuk menampung 3 tombol ikon di kanan */
             background-color: #f9f9f9;
             position: relative;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-            cursor: default; /* Kursor default karena klik tidak lagi memicu edit */
+            cursor: default; 
         }
 
         .note:hover {
@@ -123,47 +123,44 @@
             margin-top: 5px;
         }
 
-        /* PERBAIKAN: Mengubah tombol menjadi ikon dan mengatur posisi baru */
         .note button {
             border: none;
             color: white;
-            padding: 8px; /* Lebih besar untuk ikon */
+            padding: 8px; 
             cursor: pointer;
-            border-radius: 50%; /* Membuat tombol bulat */
-            line-height: 1; /* Agar ikon terpusat */
+            border-radius: 50%; 
+            line-height: 1; 
             width: 35px;
             height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            position: absolute; /* Posisikan secara absolut di dalam note */
+            position: absolute;
+            top: 10px; /* Semua tombol sejajar di bagian atas */
         }
         
         .deleteButton {
             right: 10px;
-            top: 10px;
-            background-color: #dc3545; /* Merah untuk bahaya */
+            background-color: #dc3545;
         }
 
         .deleteButton:hover {
             background-color: #c82333;
         }
         
-        /* PERBAIKAN: Tombol Edit ditambahkan di samping Hapus */
         .editButton {
-            right: 50px; /* Di sebelah tombol Hapus */
-            top: 10px;
-            background-color: #007bff; /* Biru untuk edit */
+            right: 50px; 
+            background-color: #007bff;
         }
         
         .editButton:hover {
             background-color: #0056b3;
         }
 
+        /* PERBAIKAN: Tombol Unduh diposisikan di sebelah kiri tombol Edit */
         .downloadButton {
-            left: 10px;
-            top: 10px;
+            right: 90px; /* 50px (Edit) + 35px (lebar tombol) + 5px (jarak) = sekitar 90px */
             background-color: #3498db;
         }
 
@@ -266,33 +263,33 @@
                 timestampElement.innerText = `Ditambahkan pada: ${note.timestamp}`;
                 noteElement.appendChild(timestampElement);
                 
-                // PERBAIKAN: Tombol Edit (BARU)
+                // Tombol Edit
                 const editButton = document.createElement('button');
                 editButton.classList.add('editButton');
-                editButton.innerHTML = '<i class="fas fa-edit"></i>'; // Icon
+                editButton.innerHTML = '<i class="fas fa-edit"></i>'; 
                 editButton.onclick = (e) => {
-                    e.stopPropagation(); // Mencegah pemicuan klik elemen note (jika ada)
+                    e.stopPropagation(); 
                     editNote(index);
                 };
                 noteElement.appendChild(editButton);
 
-                // PERBAIKAN: Tombol Hapus (Menjadi Ikon)
+                // Tombol Hapus 
                 const deleteButton = document.createElement('button');
                 deleteButton.classList.add('deleteButton');
-                deleteButton.innerHTML = '<i class="fas fa-trash"></i>'; // Icon
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i>'; 
                 deleteButton.onclick = (e) => {
                     e.stopPropagation(); 
                     deleteNote(index);
                 };
                 noteElement.appendChild(deleteButton);
 
-                // PERBAIKAN: Tombol Unduh (Menjadi Ikon)
+                // Tombol Unduh (Diposisikan ulang dengan CSS)
                 const downloadButton = document.createElement('button');
                 downloadButton.classList.add('downloadButton');
-                downloadButton.innerHTML = '<i class="fas fa-download"></i>'; // Icon
+                downloadButton.innerHTML = '<i class="fas fa-download"></i>'; 
                 downloadButton.onclick = (e) => {
                     e.stopPropagation();
-                    downloadNoteWithExtension(note); // Panggil fungsi unduh dengan ekstensi
+                    downloadNoteWithExtension(note); 
                 }; 
                 noteElement.appendChild(downloadButton);
 
@@ -361,7 +358,7 @@
             displayNotes();
         });
 
-        // PERBAIKAN: Fungsi Unduh dengan pilihan ekstensi (tanpa mengubah nama fungsi lama)
+        // Fungsi Unduh dengan pilihan ekstensi
         function downloadNoteWithExtension(note) {
             // Prompt untuk ekstensi file
             let ext = prompt("Masukkan ekstensi file (misal: txt, md, log, json):", "txt");
@@ -378,6 +375,8 @@
             let mimeType = 'text/plain;charset=utf-8';
             if (ext === 'json') mimeType = 'application/json;charset=utf-8';
             else if (ext === 'md') mimeType = 'text/markdown;charset=utf-8';
+            else if (ext === 'html') mimeType = 'text/html;charset=utf-8';
+            else if (ext === 'css') mimeType = 'text/css;charset=utf-8';
 
             const fileContent = `
 Judul Catatan: ${note.title}
