@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catatan Saya</title>
+    <!-- PERBAIKAN: DITAMBAHKAN - Font Awesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -82,21 +85,22 @@
             border: 1px solid #ccc;
             border-radius: 8px;
             padding: 15px;
+            padding-right: 70px; /* Tambahan ruang untuk tombol di kanan */
             background-color: #f9f9f9;
             position: relative;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            cursor: pointer; /* Menambahkan cursor: pointer untuk menunjukkan bisa diklik */
             transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            cursor: default; /* Kursor default karena klik tidak lagi memicu edit */
         }
 
         .note:hover {
-            transform: translateY(-3px); /* Sedikit dikurangi agar tidak terlalu jauh */
-            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15); /* Dikurangi */
-            background-color: #e6ffe6; /* Efek hover ringan */
+            transform: translateY(-3px);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+            background-color: #e6ffe6;
         }
         
         .note.editing {
-             border: 2px solid #007bff; /* Border biru saat sedang diedit */
+             border: 2px solid #007bff;
              background-color: #e6f7ff;
              box-shadow: 0px 0px 15px rgba(0, 123, 255, 0.5);
         }
@@ -119,34 +123,48 @@
             margin-top: 5px;
         }
 
-        .deleteButton {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: red;
+        /* PERBAIKAN: Mengubah tombol menjadi ikon dan mengatur posisi baru */
+        .note button {
             border: none;
             color: white;
-            padding: 5px 8px;
+            padding: 8px; /* Lebih besar untuk ikon */
             cursor: pointer;
-            border-radius: 3px;
-            transition: background-color 0.3s ease;
+            border-radius: 50%; /* Membuat tombol bulat */
+            line-height: 1; /* Agar ikon terpusat */
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: absolute; /* Posisikan secara absolut di dalam note */
+        }
+        
+        .deleteButton {
+            right: 10px;
+            top: 10px;
+            background-color: #dc3545; /* Merah untuk bahaya */
         }
 
         .deleteButton:hover {
-            background-color: darkred;
+            background-color: #c82333;
+        }
+        
+        /* PERBAIKAN: Tombol Edit ditambahkan di samping Hapus */
+        .editButton {
+            right: 50px; /* Di sebelah tombol Hapus */
+            top: 10px;
+            background-color: #007bff; /* Biru untuk edit */
+        }
+        
+        .editButton:hover {
+            background-color: #0056b3;
         }
 
         .downloadButton {
-            position: absolute;
-            top: 10px;
             left: 10px;
+            top: 10px;
             background-color: #3498db;
-            border: none;
-            color: white;
-            padding: 5px 8px;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: background-color 0.3s ease;
         }
 
         .downloadButton:hover {
@@ -190,9 +208,9 @@
         const addNoteButton = document.getElementById('addNoteButton');
 
         let notesData = JSON.parse(localStorage.getItem('notes')) || [];
-        let editingIndex = -1; // Variabel untuk melacak catatan yang sedang diedit (-1 berarti mode tambah baru)
-
-        // Panggil fungsi ini saat catatan diklik
+        let editingIndex = -1; 
+        
+        // Fungsi ini dipanggil saat tombol edit diklik
         function editNote(index) {
             // Hapus kelas 'editing' dari semua catatan
             document.querySelectorAll('.note').forEach(n => n.classList.remove('editing'));
@@ -225,14 +243,10 @@
             notesData.forEach((note, index) => {
                 const noteElement = document.createElement('div');
                 noteElement.classList.add('note');
-                // Tambahkan event listener untuk mengedit saat elemen catatan diklik
-                // Pastikan klik di elemen lain selain tombol Hapus/Unduh yang memicu edit
-                noteElement.onclick = (e) => {
-                    if (!e.target.closest('button')) {
-                       editNote(index);
-                    }
-                };
                 
+                // Hapus event listener noteElement.onclick lama.
+                // Pengeditan sekarang dipicu oleh tombol ikon Edit.
+
                 // Jika sedang dalam mode edit, tambahkan kelas editing
                 if (index === editingIndex) {
                     noteElement.classList.add('editing');
@@ -251,22 +265,34 @@
                 timestampElement.classList.add('timestamp');
                 timestampElement.innerText = `Ditambahkan pada: ${note.timestamp}`;
                 noteElement.appendChild(timestampElement);
+                
+                // PERBAIKAN: Tombol Edit (BARU)
+                const editButton = document.createElement('button');
+                editButton.classList.add('editButton');
+                editButton.innerHTML = '<i class="fas fa-edit"></i>'; // Icon
+                editButton.onclick = (e) => {
+                    e.stopPropagation(); // Mencegah pemicuan klik elemen note (jika ada)
+                    editNote(index);
+                };
+                noteElement.appendChild(editButton);
 
+                // PERBAIKAN: Tombol Hapus (Menjadi Ikon)
                 const deleteButton = document.createElement('button');
                 deleteButton.classList.add('deleteButton');
-                deleteButton.innerText = 'Hapus';
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i>'; // Icon
                 deleteButton.onclick = (e) => {
-                    e.stopPropagation(); // Mencegah pemicuan editNote
+                    e.stopPropagation(); 
                     deleteNote(index);
                 };
                 noteElement.appendChild(deleteButton);
 
+                // PERBAIKAN: Tombol Unduh (Menjadi Ikon)
                 const downloadButton = document.createElement('button');
                 downloadButton.classList.add('downloadButton');
-                downloadButton.innerText = 'Unduh TXT';
+                downloadButton.innerHTML = '<i class="fas fa-download"></i>'; // Icon
                 downloadButton.onclick = (e) => {
-                    e.stopPropagation(); // Mencegah pemicuan editNote
-                    downloadNoteAsTxt(note);
+                    e.stopPropagation();
+                    downloadNoteWithExtension(note); // Panggil fungsi unduh dengan ekstensi
                 }; 
                 noteElement.appendChild(downloadButton);
 
@@ -275,6 +301,8 @@
         }
 
         function deleteNote(index) {
+            if (!confirm('Apakah Anda yakin ingin menghapus catatan ini?')) return;
+            
             notesData.splice(index, 1);
             localStorage.setItem('notes', JSON.stringify(notesData));
             // Cek apakah catatan yang dihapus adalah yang sedang diedit
@@ -312,8 +340,7 @@
                 // Mode Edit: Update catatan yang sudah ada
                 notesData[editingIndex].title = title;
                 notesData[editingIndex].content = content;
-                // Anda bisa menambahkan notesData[editingIndex].timestamp = getCurrentTimestamp(); 
-                // jika Anda ingin waktu update dicatat, bukan waktu dibuat.
+                // Optional: notesData[editingIndex].timestamp = getCurrentTimestamp(); untuk waktu update
                 
                 cancelEdit(); // Keluar dari mode edit
 
@@ -334,8 +361,24 @@
             displayNotes();
         });
 
-        // Fungsi BARU untuk mengunduh catatan sebagai file TXT
-        function downloadNoteAsTxt(note) {
+        // PERBAIKAN: Fungsi Unduh dengan pilihan ekstensi (tanpa mengubah nama fungsi lama)
+        function downloadNoteWithExtension(note) {
+            // Prompt untuk ekstensi file
+            let ext = prompt("Masukkan ekstensi file (misal: txt, md, log, json):", "txt");
+
+            if (!ext || ext.trim() === "") {
+                return; // Batalkan jika kosong
+            }
+            
+            // Bersihkan ekstensi (hanya huruf dan angka)
+            ext = ext.replace(/[^a-z0-9]/gi, '').toLowerCase();
+            if (ext === "") ext = "txt"; // Default jika input dibersihkan menjadi kosong
+
+            // Tentukan MIME type
+            let mimeType = 'text/plain;charset=utf-8';
+            if (ext === 'json') mimeType = 'application/json;charset=utf-8';
+            else if (ext === 'md') mimeType = 'text/markdown;charset=utf-8';
+
             const fileContent = `
 Judul Catatan: ${note.title}
 ----------------------------------------
@@ -345,16 +388,17 @@ ${note.content}
 ----------------------------------------
 Ditambahkan pada: ${note.timestamp}
 `;
-            const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+            const blob = new Blob([fileContent], { type: mimeType });
             const url = URL.createObjectURL(blob);
 
             const downloadLink = document.createElement('a');
             downloadLink.href = url;
-            downloadLink.download = `${note.title.replace(/[^a-z0-9]/gi, '_')}.txt`; // Nama file
+            // Gunakan judul file yang aman untuk sistem file
+            downloadLink.download = `${note.title.replace(/[^a-z0-9]/gi, '_')}.${ext}`; 
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
-            URL.revokeObjectURL(url); // Bersihkan objek URL
+            URL.revokeObjectURL(url); 
         }
 
         displayNotes();
