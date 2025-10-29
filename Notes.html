@@ -85,12 +85,20 @@
             background-color: #f9f9f9;
             position: relative;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer; /* Menambahkan cursor: pointer untuk menunjukkan bisa diklik */
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
         }
 
         .note:hover {
-            transform: translateY(-5px);
-            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px); /* Sedikit dikurangi agar tidak terlalu jauh */
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15); /* Dikurangi */
+            background-color: #e6ffe6; /* Efek hover ringan */
+        }
+        
+        .note.editing {
+             border: 2px solid #007bff; /* Border biru saat sedang diedit */
+             background-color: #e6f7ff;
+             box-shadow: 0px 0px 15px rgba(0, 123, 255, 0.5);
         }
 
         .note h2 {
@@ -182,12 +190,54 @@
         const addNoteButton = document.getElementById('addNoteButton');
 
         let notesData = JSON.parse(localStorage.getItem('notes')) || [];
+        let editingIndex = -1; // Variabel untuk melacak catatan yang sedang diedit (-1 berarti mode tambah baru)
+
+        // Panggil fungsi ini saat catatan diklik
+        function editNote(index) {
+            // Hapus kelas 'editing' dari semua catatan
+            document.querySelectorAll('.note').forEach(n => n.classList.remove('editing'));
+            
+            editingIndex = index;
+            const noteToEdit = notesData[index];
+
+            // Muat data ke input
+            noteTitleInput.value = noteToEdit.title;
+            noteContentInput.value = noteToEdit.content;
+
+            // Ubah teks tombol dan tambahkan kelas editing pada elemen catatan
+            addNoteButton.textContent = 'Simpan Perubahan';
+            notesContainer.children[index].classList.add('editing');
+            
+            // Gulir ke atas ke input area
+            noteTitleInput.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function cancelEdit() {
+            editingIndex = -1;
+            noteTitleInput.value = '';
+            noteContentInput.value = '';
+            addNoteButton.textContent = 'Tambah Catatan';
+            document.querySelectorAll('.note').forEach(n => n.classList.remove('editing'));
+        }
 
         function displayNotes() {
             notesContainer.innerHTML = '';
             notesData.forEach((note, index) => {
                 const noteElement = document.createElement('div');
                 noteElement.classList.add('note');
+                // Tambahkan event listener untuk mengedit saat elemen catatan diklik
+                // Pastikan klik di elemen lain selain tombol Hapus/Unduh yang memicu edit
+                noteElement.onclick = (e) => {
+                    if (!e.target.closest('button')) {
+                       editNote(index);
+                    }
+                };
+                
+                // Jika sedang dalam mode edit, tambahkan kelas editing
+                if (index === editingIndex) {
+                    noteElement.classList.add('editing');
+                }
+
 
                 const titleElement = document.createElement('h2');
                 titleElement.innerText = note.title;
@@ -205,13 +255,19 @@
                 const deleteButton = document.createElement('button');
                 deleteButton.classList.add('deleteButton');
                 deleteButton.innerText = 'Hapus';
-                deleteButton.onclick = () => deleteNote(index);
+                deleteButton.onclick = (e) => {
+                    e.stopPropagation(); // Mencegah pemicuan editNote
+                    deleteNote(index);
+                };
                 noteElement.appendChild(deleteButton);
 
                 const downloadButton = document.createElement('button');
                 downloadButton.classList.add('downloadButton');
-                downloadButton.innerText = 'Unduh';
-                downloadButton.onclick = () => downloadNoteAsImage(note); // Panggil fungsi unduh
+                downloadButton.innerText = 'Unduh TXT';
+                downloadButton.onclick = (e) => {
+                    e.stopPropagation(); // Mencegah pemicuan editNote
+                    downloadNoteAsTxt(note);
+                }; 
                 noteElement.appendChild(downloadButton);
 
                 notesContainer.appendChild(noteElement);
@@ -221,6 +277,13 @@
         function deleteNote(index) {
             notesData.splice(index, 1);
             localStorage.setItem('notes', JSON.stringify(notesData));
+            // Cek apakah catatan yang dihapus adalah yang sedang diedit
+            if (index === editingIndex) {
+                cancelEdit();
+            } else if (index < editingIndex) {
+                 // Jika yang dihapus sebelum indeks edit, geser indeks edit
+                editingIndex--;
+            }
             displayNotes();
         }
 
@@ -239,59 +302,59 @@
         addNoteButton.addEventListener('click', () => {
             const title = noteTitleInput.value.trim();
             const content = noteContentInput.value.trim();
-            const timestamp = getCurrentTimestamp();
+            
+            if (title === "" || content === "") {
+                alert("Judul dan isi catatan tidak boleh kosong.");
+                return;
+            }
 
-            if (title !== "" && content !== "") {
+            if (editingIndex !== -1) {
+                // Mode Edit: Update catatan yang sudah ada
+                notesData[editingIndex].title = title;
+                notesData[editingIndex].content = content;
+                // Anda bisa menambahkan notesData[editingIndex].timestamp = getCurrentTimestamp(); 
+                // jika Anda ingin waktu update dicatat, bukan waktu dibuat.
+                
+                cancelEdit(); // Keluar dari mode edit
+
+            } else {
+                // Mode Tambah Baru: Buat catatan baru
+                const timestamp = getCurrentTimestamp();
                 notesData.push({
                     title,
                     content,
                     timestamp
                 });
-                localStorage.setItem('notes', JSON.stringify(notesData));
+                
                 noteTitleInput.value = '';
                 noteContentInput.value = '';
-                displayNotes();
-            } else {
-                alert("Judul dan isi catatan tidak boleh kosong.");
             }
+
+            localStorage.setItem('notes', JSON.stringify(notesData));
+            displayNotes();
         });
 
-        // Fungsi untuk mengunduh catatan sebagai gambar
-        function downloadNoteAsImage(note) {
-            // Buat elemen canvas
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+        // Fungsi BARU untuk mengunduh catatan sebagai file TXT
+        function downloadNoteAsTxt(note) {
+            const fileContent = `
+Judul Catatan: ${note.title}
+----------------------------------------
+Isi: 
+${note.content}
 
-            // Ukuran canvas (sesuaikan sesuai kebutuhan)
-            canvas.width = 500;
-            canvas.height = 300;
+----------------------------------------
+Ditambahkan pada: ${note.timestamp}
+`;
+            const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
 
-            // Warna latar belakang (opsional)
-            context.fillStyle = '#fff';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Gaya teks
-            context.font = '20px Arial';
-            context.fillStyle = '#000';
-            context.textAlign = 'center';
-
-            // Tambahkan judul dan konten ke canvas
-            context.fillText(note.title, canvas.width / 2, 50);
-            context.font = '14px Arial';
-            context.fillText(note.content, canvas.width / 2, 150);
-            context.font = '10px Arial';
-            context.fillText(note.timestamp, canvas.width / 2, 250);
-
-            // Konversi canvas menjadi URL data
-            const imageURL = canvas.toDataURL('image/jpeg');
-
-            // Buat elemen tautan (a) untuk mengunduh gambar
             const downloadLink = document.createElement('a');
-            downloadLink.href = imageURL;
-            downloadLink.download = `${note.title}.jpg`; // Nama file
+            downloadLink.href = url;
+            downloadLink.download = `${note.title.replace(/[^a-z0-9]/gi, '_')}.txt`; // Nama file
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url); // Bersihkan objek URL
         }
 
         displayNotes();
